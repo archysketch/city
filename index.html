@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>Low Poly City</title>
 
-  <!-- model-viewer -->
   <script type="module"
     src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js">
   </script>
@@ -15,14 +14,13 @@
       padding: 0;
       width: 100%;
       height: 100%;
-      background: #f2f2f2; /* Behance tarzı soft arka plan */
+      background: #f2f2f2;
       overflow: hidden;
     }
 
     model-viewer {
       width: 100%;
       height: 100%;
-      background: transparent;
     }
 
     model-viewer::part(progress-bar) {
@@ -33,29 +31,67 @@
 <body>
 
 <model-viewer
+  id="viewer"
   src="./lowpoly.glb"
 
   camera-controls
-  disable-pan="false"
+  interaction-prompt="none"
 
-  /* Kamera */
-  camera-orbit="45deg 65deg 35m"
-  min-camera-orbit="-180deg 20deg 10m"
-  max-camera-orbit="180deg 85deg 80m"
+  /* başlangıç kamerası (uzak + dönük) */
+  camera-orbit="120deg 75deg 90m"
   camera-target="0m 0m 0m"
 
-  /* Işık & render */
+  min-camera-orbit="-180deg 20deg 10m"
+  max-camera-orbit="180deg 85deg 120m"
+
   exposure="1"
   shadow-intensity="0.4"
   shadow-softness="0.7"
   tone-mapping="neutral"
 
   environment-image="https://modelviewer.dev/shared-assets/environments/neutral.hdr"
-
-  /* Performans */
-  interaction-prompt="none"
 >
 </model-viewer>
+
+<script>
+  const viewer = document.getElementById('viewer');
+
+  viewer.addEventListener('load', () => {
+    // Final (kullanıcıya bırakılacak) kamera
+    const finalAzimuth = 45;
+    const finalElevation = 65;
+    const finalDistance = 35;
+
+    // Başlangıç
+    let azimuth = 120;
+    let elevation = 75;
+    let distance = 90;
+
+    const duration = 2500; // ms
+    const start = performance.now();
+
+    function animate(time) {
+      const t = Math.min((time - start) / duration, 1);
+      const ease = t * (2 - t); // easeOut
+
+      const currentAzimuth =
+        azimuth + (finalAzimuth - azimuth) * ease;
+      const currentElevation =
+        elevation + (finalElevation - elevation) * ease;
+      const currentDistance =
+        distance + (finalDistance - distance) * ease;
+
+      viewer.cameraOrbit =
+        `${currentAzimuth}deg ${currentElevation}deg ${currentDistance}m`;
+
+      if (t < 1) {
+        requestAnimationFrame(animate);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  });
+</script>
 
 </body>
 </html>
