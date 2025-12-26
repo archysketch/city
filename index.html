@@ -37,12 +37,12 @@
   camera-controls
   interaction-prompt="none"
 
-  /* başlangıç kamerası (uzak + dönük) */
-  camera-orbit="120deg 75deg 90m"
+  /* 🚀 BAŞLANGIÇ: ÇOK UZAK */
+  camera-orbit="170deg 82deg 200m"
   camera-target="0m 0m 0m"
 
-  min-camera-orbit="-180deg 20deg 10m"
-  max-camera-orbit="180deg 85deg 120m"
+  min-camera-orbit="-180deg 20deg 20m"
+  max-camera-orbit="180deg 85deg 260m"
 
   exposure="1"
   shadow-intensity="0.4"
@@ -57,39 +57,43 @@
   const viewer = document.getElementById('viewer');
 
   viewer.addEventListener('load', () => {
-    // Final (kullanıcıya bırakılacak) kamera
-    const finalAzimuth = 45;
-    const finalElevation = 65;
-    const finalDistance = 35;
 
-    // Başlangıç
-    let azimuth = 120;
-    let elevation = 75;
-    let distance = 90;
+    const startCam = {
+      azimuth: 170,
+      elevation: 82,
+      distance: 200
+    };
 
-    const duration = 2500; // ms
-    const start = performance.now();
+    const endCam = {
+      azimuth: 45,
+      elevation: 65,
+      distance: 55
+    };
+
+    const duration = 3000;
+    let startTime = null;
 
     function animate(time) {
-      const t = Math.min((time - start) / duration, 1);
+      if (!startTime) startTime = time;
+      const t = Math.min((time - startTime) / duration, 1);
       const ease = t * (2 - t); // easeOut
 
-      const currentAzimuth =
-        azimuth + (finalAzimuth - azimuth) * ease;
-      const currentElevation =
-        elevation + (finalElevation - elevation) * ease;
-      const currentDistance =
-        distance + (finalDistance - distance) * ease;
+      const az =
+        startCam.azimuth + (endCam.azimuth - startCam.azimuth) * ease;
+      const el =
+        startCam.elevation + (endCam.elevation - startCam.elevation) * ease;
+      const dist =
+        startCam.distance + (endCam.distance - startCam.distance) * ease;
 
-      viewer.cameraOrbit =
-        `${currentAzimuth}deg ${currentElevation}deg ${currentDistance}m`;
+      viewer.cameraOrbit = `${az}deg ${el}deg ${dist}m`;
 
-      if (t < 1) {
-        requestAnimationFrame(animate);
-      }
+      if (t < 1) requestAnimationFrame(animate);
     }
 
-    requestAnimationFrame(animate);
+    /* 🧠 KRİTİK: ilk frame kaçmasın diye 2 frame bekle */
+    requestAnimationFrame(() => {
+      requestAnimationFrame(animate);
+    });
   });
 </script>
 
