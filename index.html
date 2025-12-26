@@ -16,6 +16,7 @@
       height: 100%;
       background: #f2f2f2;
       overflow: hidden;
+      font-family: Inter, system-ui, sans-serif;
     }
 
     model-viewer {
@@ -25,6 +26,39 @@
 
     model-viewer::part(progress-bar) {
       display: none;
+    }
+
+    /* 📍 PIN */
+    .hotspot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #111;
+      color: #fff;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 0 0 6px rgba(255,255,255,0.15);
+      transition: transform 0.2s ease;
+    }
+
+    .hotspot:hover {
+      transform: scale(1.1);
+    }
+
+    /* 🧾 BİLGİ KUTUSU */
+    .info {
+      position: absolute;
+      background: rgba(20,20,20,0.9);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      max-width: 200px;
+      display: none;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -37,7 +71,9 @@
   camera-controls
   interaction-prompt="none"
 
-  /* 🚀 BAŞLANGIÇ: ÇOK UZAK */
+  /* 🖱️ PAN AKTİF */
+  disable-pan="false"
+
   camera-orbit="170deg 82deg 200m"
   camera-target="0m 0m 0m"
 
@@ -51,49 +87,79 @@
 
   environment-image="https://modelviewer.dev/shared-assets/environments/neutral.hdr"
 >
+
+  <!-- 📍 PIN 1 -->
+  <div
+    class="hotspot"
+    slot="hotspot-1"
+    data-position="10m 4m -6m"
+    data-normal="0m 1m 0m"
+    data-info="Cultural and social center “The Družba”">
+    1
+  </div>
+
+  <!-- 📍 PIN 2 -->
+  <div
+    class="hotspot"
+    slot="hotspot-2"
+    data-position="-8m 3m 12m"
+    data-normal="0m 1m 0m"
+    data-info="Public library and exhibition space">
+    2
+  </div>
+
 </model-viewer>
+
+<div id="infoBox" class="info"></div>
 
 <script>
   const viewer = document.getElementById('viewer');
+  const infoBox = document.getElementById('infoBox');
 
+  /* 🎥 GİRİŞ ANİMASYONU */
   viewer.addEventListener('load', () => {
-
-    const startCam = {
-      azimuth: 170,
-      elevation: 82,
-      distance: 200
-    };
-
-    const endCam = {
-      azimuth: 45,
-      elevation: 65,
-      distance: 55
-    };
-
+    const start = { az: 170, el: 82, d: 200 };
+    const end = { az: 45, el: 65, d: 55 };
     const duration = 3000;
-    let startTime = null;
+    let t0 = null;
 
-    function animate(time) {
-      if (!startTime) startTime = time;
-      const t = Math.min((time - startTime) / duration, 1);
-      const ease = t * (2 - t); // easeOut
+    function animate(t) {
+      if (!t0) t0 = t;
+      const p = Math.min((t - t0) / duration, 1);
+      const e = p * (2 - p);
 
-      const az =
-        startCam.azimuth + (endCam.azimuth - startCam.azimuth) * ease;
-      const el =
-        startCam.elevation + (endCam.elevation - startCam.elevation) * ease;
-      const dist =
-        startCam.distance + (endCam.distance - startCam.distance) * ease;
+      const az = start.az + (end.az - start.az) * e;
+      const el = start.el + (end.el - start.el) * e;
+      const d  = start.d  + (end.d  - start.d)  * e;
 
-      viewer.cameraOrbit = `${az}deg ${el}deg ${dist}m`;
-
-      if (t < 1) requestAnimationFrame(animate);
+      viewer.cameraOrbit = `${az}deg ${el}deg ${d}m`;
+      if (p < 1) requestAnimationFrame(animate);
     }
 
-    /* 🧠 KRİTİK: ilk frame kaçmasın diye 2 frame bekle */
     requestAnimationFrame(() => {
       requestAnimationFrame(animate);
     });
+  });
+
+  /* 📍 PIN TIKLAMA */
+  viewer.querySelectorAll('.hotspot').forEach(pin => {
+    pin.addEventListener('click', (e) => {
+      e.stopPropagation();
+      infoBox.textContent = pin.dataset.info;
+      infoBox.style.display = 'block';
+    });
+  });
+
+  /* 📦 BİLGİ KUTUSU TAKİBİ */
+  viewer.addEventListener('mousemove', (e) => {
+    if (infoBox.style.display === 'block') {
+      infoBox.style.left = e.clientX + 12 + 'px';
+      infoBox.style.top  = e.clientY + 12 + 'px';
+    }
+  });
+
+  viewer.addEventListener('click', () => {
+    infoBox.style.display = 'none';
   });
 </script>
 
